@@ -18,8 +18,8 @@ def Get_file(doc):
 
 # 2.去符号及停用字
 
-def Dis_sig(str):
-    stopwords = [w.strip() for w in open(".\stop.txt", 'r', encoding='UTF-8').readlines()]
+def Dis_sig(str,stopwords):
+    # stopwords = [w.strip() for w in open(stop_path, 'r', encoding='UTF-8').readlines()]
     result = []
     for tags in str:
         if (re.match(u"[a-zA-Z0-9\u4e00-\u9fa5]", tags)):
@@ -49,7 +49,7 @@ def main():
     start_time = time.time()
 
     try:
-        orig_path, add_path, answer_path = sys.argv[1:4]
+        orig_path, add_path, answer_path, stop_path= sys.argv[1:5]
     except BaseException:
         print("Error: 输入命令错误")
     else:
@@ -73,6 +73,7 @@ def main():
         else:
             conditio_two = 1
             orig_add.close()
+
             # 判断答案文件路径等是否出错
             try:
                 answer_txt = open(answer_path, 'w', encoding='UTF-8')
@@ -81,15 +82,25 @@ def main():
                 conditio_three = 0
             else:
                 conditio_three = 1
+            # 判断停用表命令行参数有没有错误
+            try:
+                stopwords = [w.strip() for w in open(stop_path, 'r', encoding='UTF-8').readlines()]
+                # word_context = stop_word.read()
+            except IOError:
+                print("Error: 没有从该路径：{}找到文件/读取文件失败".format(stop_path))
+                conditio_four = 0
+            else:
+                conditio_four = 1
+                # orig.close()
 
             # 如果输入命令行参数没有错误则运行
-            if (conditio_one & conditio_two & conditio_three):
+            if (conditio_one & conditio_two & conditio_three & conditio_four):
                 # path = ".\orig.txt"  # 论文原文的文件的绝对路径（作业要求）
                 # path_add = ".\orig_0.8_dis_15.txt"  # 抄袭版论文的文件的绝对路径
                 test = Get_file(orig_context)
                 doc = Get_file(add_context)
-                doc = Dis_sig(doc)
-                test = Dis_sig(test)
+                doc = Dis_sig(doc,stopwords)
+                test = Dis_sig(test,stopwords)
 
                 similarity = Com_sim(doc, test)
 
@@ -100,7 +111,12 @@ def main():
             print('查重率：%.2f' % similarity)
             print("输出文件到:" + answer_path)
             print('程序所耗时间：%.2f s' % (time_required))
-
+             #写入答案文件
+            answer_txt.write("源文件:"+orig_path+'\n')
+            answer_txt.write("抄袭文件:"+add_path+'\n')
+            answer_txt.write('查重率：%.2f' %similarity+'\n')
+            answer_txt.write('程序所耗时间：%.2f s'%(time_required)+'\n')
+            answer_txt.close()
 
 
 
@@ -108,9 +124,5 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
-
 
 
